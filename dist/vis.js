@@ -3660,13 +3660,13 @@ var Validator = function () {
   }, {
     key: 'checkFields',
     value: function checkFields(option, options, referenceOptions, referenceOption, refOptionObj, path) {
+    	
       var log = function log(message) {
         console.log('%c' + message + Validator.printLocation(path, option), printStyle);
       };
 
       var optionType = Validator.getType(options[option]);
       var refOptionType = refOptionObj[optionType];
-
       if (refOptionType !== undefined) {
         // if the type is correct, we check if it is supposed to be one of a few select values
         if (Validator.getType(refOptionType) === 'array' && refOptionType.indexOf(options[option]) === -1) {
@@ -3694,7 +3694,6 @@ var Validator = function () {
     key: 'getType',
     value: function getType(object) {
       var type = typeof object === 'undefined' ? 'undefined' : (0, _typeof3['default'])(object);
-
       if (type === 'object') {
         if (object === null) {
           return 'null';
@@ -16431,7 +16430,7 @@ var STYLENAME = {
  * Specifically, these are the fields which require no special handling,
  * and can be directly copied over.
  */
-var OPTIONKEYS = ['width', 'height', 'filterLabel', 'legendLabel', 'xLabel', 'yLabel', 'zLabel', 'xValueLabel', 'yValueLabel', 'zValueLabel', 'showXAxis', 'showYAxis', 'showZAxis', 'showGrid', 'showPerspective', 'showShadow', 'keepAspectRatio', 'verticalRatio', 'dotSizeRatio', 'dotSizeMinFraction', 'dotSizeMaxFraction', 'showAnimationControls', 'animationInterval', 'animationPreload', 'animationAutoStart', 'axisColor', 'gridColor', 'xCenter', 'yCenter'];
+var OPTIONKEYS = ['width', 'height', 'filterLabel', 'legendLabel', 'xLabel', 'yLabel', 'zLabel', 'xValueLabel', 'yValueLabel', 'zValueLabel', 'showXAxis', 'showYAxis', 'showZAxis', 'showGrid', 'showPerspective', 'showShadow', 'keepAspectRatio', 'verticalRatio', 'dotSizeRatio', 'dotSizeMinFraction', 'dotSizeMaxFraction', 'showAnimationControls', 'animationInterval', 'animationPreload', 'animationAutoStart', 'axisColor', 'gridColor', 'xCenter', 'yCenter','surfaceMonoColor'];
 
 /**
  * Field names in the options hash which are of relevance to the user.
@@ -34594,7 +34593,7 @@ Graph3d.DEFAULTS = {
   animationInterval: 1000, // milliseconds
   animationPreload: false,
   animationAutoStart: autoByDefault,
-
+  surfaceMonoColor:autoByDefault,
   axisColor: '#4D4D4D',
   gridColor: '#D3D3D3',
   xCenter: '55%',
@@ -35789,12 +35788,24 @@ Graph3d.prototype._redrawAxis = function () {
  * @private
  */
 Graph3d.prototype._hsv2rgb = function (H, S, V) {
-  var R, G, B, C, Hi, X;
+  var R, G, B, C, Hi, X, M;
 
   C = V * S;
   Hi = Math.floor(H / 60); // hi = 0,1,2,3,4,5
   X = C * (1 - Math.abs(H / 60 % 2 - 1));
-
+  M = this.surfaceMonoColor;
+  if(typeof M != "undefined"){
+	  if(M.color.indexOf("rgb")!=-1){
+		  return M.color;
+	  }else{
+		  var hex = M.color.replace('#','');
+		  R = parseInt(hex.substring(0, hex.length/3), 16);
+		  G = parseInt(hex.substring(hex.length/3, 2*hex.length/3), 16);
+		  B = parseInt(hex.substring(2*hex.length/3, 3*hex.length/3), 16); 
+		  return 'RGBA(' + parseInt(R * 255) + ',' + parseInt(G * 255) + ',' + parseInt(B * 255) + ','+M.alpha+')';
+	  }
+  }
+  else{
   switch (Hi) {
     case 0:
       R = C;G = X;B = 0;break;
@@ -35811,7 +35822,7 @@ Graph3d.prototype._hsv2rgb = function (H, S, V) {
 
     default:
       R = 0;G = 0;B = 0;break;
-  }
+  }}
 
   return 'RGB(' + parseInt(R * 255) + ',' + parseInt(G * 255) + ',' + parseInt(B * 255) + ')';
 };
@@ -37045,6 +37056,11 @@ var allOptions = {
     number: number, // TODO: either Graph3d.DEFAULT has string, or number allowed in documentation
     string: ['bar', 'bar-color', 'bar-size', 'dot', 'dot-line', 'dot-color', 'dot-size', 'line', 'grid', 'surface']
   },
+  surfaceMonoColor:{
+	  color:{string:string},
+	  alpha:{number:number},
+	  __type__: { object: object }
+  },
   tooltip: { boolean: bool, 'function': 'function' },
   tooltipStyle: {
     content: {
@@ -37077,7 +37093,7 @@ var allOptions = {
   valueMax: { number: number, 'undefined': 'undefined' },
   valueMin: { number: number, 'undefined': 'undefined' },
   verticalRatio: { number: number },
-
+ 
   //globals :
   height: { string: string },
   width: { string: string },
